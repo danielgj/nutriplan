@@ -6,16 +6,21 @@ import { WeeklyCalendar } from './components/WeeklyCalendar';
 import { ShoppingList } from './components/ShoppingList';
 import { Dashboard } from './components/Dashboard';
 import { Login } from './components/Login';
+import { LandingPage } from './components/LandingPage';
 
 const AppContent: React.FC = () => {
   const { user, loading, logout } = useAuth();
   const [currentView, setCurrentView] = useState<'dashboard' | 'calendar' | 'shopping'>('dashboard');
+  const [showLogin, setShowLogin] = useState(false);
 
   if (loading) {
     return <div className="h-screen flex items-center justify-center text-stone-400">Cargando...</div>;
   }
 
   if (!user) {
+    if (!showLogin) {
+      return <LandingPage onGetStarted={() => setShowLogin(true)} />;
+    }
     return <Login />;
   }
 
