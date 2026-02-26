@@ -5,14 +5,13 @@ import { MealModal } from './MealModal';
 import { Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const TYPE_LABELS: Record<MealType, string> = {
-    breakfast: 'Desayuno',
     lunch: 'Comida',
     dinner: 'Cena',
     rio: 'Río'
 };
 
-const ORDERED_TYPES: MealType[] = ['breakfast', 'lunch', 'rio', 'dinner'];
-const MOBILE_TYPES: MealType[] = ['lunch', 'rio', 'dinner'];
+const ORDERED_TYPES: MealType[] = ['lunch', 'dinner', 'rio'];
+const MOBILE_TYPES: MealType[] = ['lunch', 'dinner', 'rio'];
 
 export const WeeklyCalendar: React.FC = () => {
     const { meals, addMeal, deleteMeal } = useNutri();
@@ -20,7 +19,7 @@ export const WeeklyCalendar: React.FC = () => {
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-    const [selectedType, setSelectedType] = useState<MealType>('breakfast');
+    const [selectedType, setSelectedType] = useState<MealType>('lunch');
 
     // Helper: Get start of current week (Monday)
     const getStartOfWeek = (date: Date) => {

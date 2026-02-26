@@ -11,7 +11,6 @@ interface MealModalProps {
 }
 
 const TYPE_LABELS: Record<MealType, string> = {
-    breakfast: 'Desayuno',
     lunch: 'Comida',
     dinner: 'Cena',
     rio: 'Río'

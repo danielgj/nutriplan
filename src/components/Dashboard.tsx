@@ -4,13 +4,12 @@ import { ShoppingBag, ArrowRight } from 'lucide-react';
 import type { MealType } from '../types';
 
 const TYPE_LABELS: Record<MealType, string> = {
-    breakfast: 'Desayuno',
     lunch: 'Comida',
-    rio: 'Río',
-    dinner: 'Cena'
+    dinner: 'Cena',
+    rio: 'Río'
 };
 
-const ORDERED_TYPES: MealType[] = ['breakfast', 'lunch', 'rio', 'dinner'];
+const ORDERED_TYPES: MealType[] = ['lunch', 'dinner', 'rio'];
 
 interface DashboardProps {
     onNavigate: (view: 'calendar' | 'shopping') => void;
