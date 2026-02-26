@@ -36,4 +36,5 @@ export interface NutriState {
     addSupermarket: (name: string) => void;
     deleteSupermarket: (id: string) => void;
     assignItemToSupermarket: (itemId: string, supermarketId: string) => void;
+    deleteCompletedItemsBySupermarket: (supermarketId: string) => void;
 }

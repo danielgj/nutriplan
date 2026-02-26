@@ -237,6 +237,27 @@ export const NutriProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     };
 
+    const deleteCompletedItemsBySupermarket = async (supermarketId: string) => {
+        if (!user) return;
+        try {
+            const batch = writeBatch(db);
+            const itemsToDelete = shoppingList.filter(
+                item => (item.supermarketId || 'default') === supermarketId && item.completed
+            );
+
+            if (itemsToDelete.length === 0) return;
+
+            itemsToDelete.forEach(item => {
+                const ref = doc(db, `users/${user.uid}/shoppingList`, item.id);
+                batch.delete(ref);
+            });
+
+            await batch.commit();
+        } catch (error) {
+            console.error("Error deleting completed items:", error);
+        }
+    };
+
     return (
         <NutriContext.Provider
             value={{
@@ -252,7 +273,8 @@ export const NutriProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 clearShoppingList,
                 addSupermarket,
                 deleteSupermarket,
-                assignItemToSupermarket
+                assignItemToSupermarket,
+                deleteCompletedItemsBySupermarket
             }}
         >
             {children}

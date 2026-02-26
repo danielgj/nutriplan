@@ -1,12 +1,27 @@
 import React, { useState } from 'react';
 import { useNutri } from '../context/NutriContext';
-import { Trash2, Plus, Check, Store } from 'lucide-react';
+import { Trash2, Plus, Check, Store, Eraser } from 'lucide-react';
+import { ConfirmationModal } from './ConfirmationModal';
 
 export const ShoppingList: React.FC = () => {
-    const { shoppingList, supermarkets, toggleShoppingItem, deleteShoppingItem, addShoppingItem, addSupermarket, deleteSupermarket, assignItemToSupermarket } = useNutri();
+    const {
+        shoppingList,
+        supermarkets,
+        toggleShoppingItem,
+        deleteShoppingItem,
+        addShoppingItem,
+        addSupermarket,
+        deleteSupermarket,
+        assignItemToSupermarket,
+        deleteCompletedItemsBySupermarket
+    } = useNutri();
     const [newItemName, setNewItemName] = useState('');
     const [newSupermarketName, setNewSupermarketName] = useState('');
     const [selectedSupermarket, setSelectedSupermarket] = useState<string>('default');
+
+    // Modal state
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [supermarketToClear, setSupermarketToClear] = useState<{ id: string, name: string } | null>(null);
 
     const handleAddItem = (e: React.FormEvent) => {
         e.preventDefault();
@@ -21,6 +36,18 @@ export const ShoppingList: React.FC = () => {
         if (newSupermarketName.trim()) {
             addSupermarket(newSupermarketName.trim());
             setNewSupermarketName('');
+        }
+    };
+
+    const handleOpenClearModal = (id: string, name: string) => {
+        setSupermarketToClear({ id, name });
+        setIsConfirmModalOpen(true);
+    };
+
+    const handleConfirmClear = () => {
+        if (supermarketToClear) {
+            deleteCompletedItemsBySupermarket(supermarketToClear.id);
+            setSupermarketToClear(null);
         }
     };
 
@@ -41,7 +68,12 @@ export const ShoppingList: React.FC = () => {
         <div className="max-w-3xl mx-auto space-y-8">
             <header className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-stone-800">Lista de la Compra</h2>
-                <span className="text-sm font-medium text-stone-500">{completedCount} / {shoppingList.length} items</span>
+                <div className="flex flex-col items-end">
+                    <span className="text-sm font-medium text-stone-500">{completedCount} / {shoppingList.length} items</span>
+                    {shoppingList.length > 0 && completedCount === shoppingList.length && (
+                        <span className="text-xs text-green-600 font-medium">¡Todo comprado!</span>
+                    )}
+                </div>
             </header>
 
             {/* Add Item Form */}
@@ -58,7 +90,7 @@ export const ShoppingList: React.FC = () => {
                     <select
                         value={selectedSupermarket}
                         onChange={(e) => setSelectedSupermarket(e.target.value)}
-                        className="px-4 py-2 rounded-lg border border-stone-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                        className="px-4 py-2 rounded-lg border border-stone-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-stone-700"
                     >
                         {supermarkets.map(sm => (
                             <option key={sm.id} value={sm.id}>{sm.name}</option>
@@ -78,7 +110,7 @@ export const ShoppingList: React.FC = () => {
             {/* Supermarket Management */}
             <div className="bg-stone-50 p-4 rounded-xl border border-stone-200">
                 <details className="group">
-                    <summary className="flex items-center gap-2 cursor-pointer font-medium text-stone-600 hover:text-stone-800">
+                    <summary className="flex items-center gap-2 cursor-pointer font-medium text-stone-600 hover:text-stone-800 focus:outline-none">
                         <Store className="w-4 h-4" />
                         Gestionar Supermercados
                     </summary>
@@ -89,7 +121,7 @@ export const ShoppingList: React.FC = () => {
                                 value={newSupermarketName}
                                 onChange={(e) => setNewSupermarketName(e.target.value)}
                                 placeholder="Nuevo Supermercado..."
-                                className="flex-1 px-3 py-1.5 rounded-lg border border-stone-200 text-sm"
+                                className="flex-1 px-3 py-1.5 rounded-lg border border-stone-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20"
                             />
                             <button type="submit" disabled={!newSupermarketName.trim()} className="px-3 py-1.5 bg-stone-200 hover:bg-stone-300 rounded-lg text-sm font-medium text-stone-700 transition-colors">
                                 Añadir
@@ -100,7 +132,7 @@ export const ShoppingList: React.FC = () => {
                                 <div key={sm.id} className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-stone-200 text-sm">
                                     <span style={{ color: sm.color }} className="font-semibold">{sm.name}</span>
                                     {sm.id !== 'default' && (
-                                        <button onClick={() => deleteSupermarket(sm.id)} className="text-stone-400 hover:text-red-500">
+                                        <button onClick={() => deleteSupermarket(sm.id)} className="text-stone-400 hover:text-red-500 transition-colors">
                                             <XIcon className="w-3 h-3" />
                                         </button>
                                     )}
@@ -114,37 +146,53 @@ export const ShoppingList: React.FC = () => {
             {/* Lists per Supermarket */}
             <div className="space-y-6">
                 {groupedItems.map(group => {
-                    if (group.id !== 'default' && group.items.length === 0) return null; // Hide empty non-default sections? Or show all? Let's hide empty strictly, but show General always or if meaningful.
-                    // Actually showing all is better for drag/drop (future) or awareness.
-                    // Let's hide empty if not default, but always show default if it has items.
+                    if (group.id !== 'default' && group.items.length === 0) return null;
                     if (group.items.length === 0 && group.id !== 'default') return null;
+
+                    const completedInGroup = group.items.filter(i => i.completed).length;
 
                     return (
                         <div key={group.id} className="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
                             <div className="px-4 py-3 bg-stone-50 border-b border-stone-100 flex items-center justify-between">
                                 <h3 className="font-bold text-stone-700 flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: group.color }}></span>
+                                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: group.color }}></span>
                                     {group.name}
                                 </h3>
-                                <span className="text-xs font-medium text-stone-400">{group.items.filter(i => i.completed).length}/{group.items.length}</span>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-xs font-medium text-stone-400">
+                                        {completedInGroup} / {group.items.length}
+                                    </span>
+                                    {completedInGroup > 0 && (
+                                        <button
+                                            onClick={() => handleOpenClearModal(group.id, group.name)}
+                                            title="Limpiar comprados"
+                                            className="p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all flex items-center gap-1.5"
+                                        >
+                                            <Eraser className="w-4 h-4" />
+                                            <span className="text-xs font-semibold">Limpiar</span>
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                             <ul className="divide-y divide-stone-100">
                                 {group.id === 'default' && group.items.length === 0 && (
-                                    <li className="p-4 text-center text-stone-400 text-sm italic">No hay productos sin asignar.</li>
+                                    <li className="p-6 text-center text-stone-400 text-sm italic">
+                                        No hay productos pendientes.
+                                    </li>
                                 )}
                                 {group.items.map((item) => (
-                                    <li key={item.id} className="flex items-center justify-between p-3 hover:bg-stone-50 transition-colors group">
+                                    <li key={item.id} className="flex items-center justify-between p-3.5 hover:bg-stone-50 transition-colors group">
                                         <button
                                             onClick={() => toggleShoppingItem(item.id)}
                                             className="flex items-center gap-3 flex-1 text-left"
                                         >
-                                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${item.completed
-                                                ? 'bg-green-500 border-green-500'
+                                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${item.completed
+                                                ? 'bg-green-500 border-green-500 shadow-sm'
                                                 : 'border-stone-300 group-hover:border-green-400'
                                                 }`}>
                                                 {item.completed && <Check className="w-3.5 h-3.5 text-white" />}
                                             </div>
-                                            <span className={`text-sm font-medium ${item.completed ? 'text-stone-400 line-through' : 'text-stone-700'}`}>
+                                            <span className={`text-sm font-medium transition-all ${item.completed ? 'text-stone-400 line-through' : 'text-stone-700'}`}>
                                                 {item.name}
                                             </span>
                                         </button>
@@ -173,6 +221,16 @@ export const ShoppingList: React.FC = () => {
                     );
                 })}
             </div>
+
+            <ConfirmationModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setIsConfirmModalOpen(false)}
+                onConfirm={handleConfirmClear}
+                title={`Limpiar ${supermarketToClear?.name}`}
+                message={`¿Estás seguro de que quieres eliminar todos los artículos ya comprados de "${supermarketToClear?.name}"? Esta acción no se puede deshacer.`}
+                confirmText="Eliminar comprados"
+                variant="danger"
+            />
         </div>
     );
 };
