@@ -91,9 +91,9 @@ export const WeeklyCalendar: React.FC = () => {
                 {/* Mobile Header Labels (hidden on desktop) */}
                 <div className="grid md:hidden grid-cols-[50px_1fr_1fr_1fr] gap-2 px-2 sticky top-[64px] bg-stone-50 z-20 py-2 border-b border-stone-200">
                     <div className="text-[10px] font-bold text-stone-400 uppercase">Día</div>
-                    <div className="text-[10px] font-bold text-stone-400 uppercase text-center">Comida</div>
-                    <div className="text-[10px] font-bold text-stone-400 uppercase text-center">Río</div>
-                    <div className="text-[10px] font-bold text-stone-400 uppercase text-center">Cena</div>
+                    {ORDERED_TYPES.map((type) => (
+                        <div className="text-[10px] font-bold text-stone-400 uppercase text-center">{TYPE_LABELS[type]}</div>
+                    ))}
                 </div>
 
                 <div className="flex flex-col md:grid md:grid-cols-7 gap-2 md:gap-4">
